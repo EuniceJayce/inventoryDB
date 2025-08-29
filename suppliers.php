@@ -81,6 +81,7 @@ if (isset($_POST['add_supplier'])) {
         <a href="purchase_orders.php"><i class="fa fa-file-invoice"></i> Purchase Orders</a>
         <a href="reports.php"><i class="fa fa-file"></i> Reports</a>
         <a href="users.php"><i class="fa fa-users"></i> Users</a>
+        <a href="logout.php" class="text-danger"><i class="fa fa-sign-out-alt"></i> Logout</a>
       </div>
 
       <!-- Main Content -->
@@ -104,7 +105,7 @@ if (isset($_POST['add_supplier'])) {
                   <th>Phone</th>
                   <th>Email</th>
                   <th>Address</th>
-                  <th>Actions</th>
+                  <th> </th>
                 </tr>
               </thead>
               <tbody>

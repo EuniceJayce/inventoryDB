@@ -20,8 +20,8 @@ $recent_products = $conn->query("
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.category_id
     LEFT JOIN suppliers s ON p.supplier_id = s.supplier_id
-    ORDER BY p.product_id DESC
-    LIMIT 5
+    ORDER BY p.product_id ASC
+    
 ");
 ?>
 <!DOCTYPE html>
@@ -54,7 +54,7 @@ $recent_products = $conn->query("
         <a href="purchase_orders.php"><i class="fa fa-file-invoice"></i> Purchase Orders</a>
         <a href="reports.php"><i class="fa fa-file"></i> Reports</a>
         <a href="users.php"><i class="fa fa-users"></i> Users</a>
-        <a href="logout.php" class="text-warning"><i class="fa fa-sign-out-alt"></i> Logout</a>
+        <a href="logout.php" class="text-danger"><i class="fa fa-sign-out-alt"></i> Logout</a>
       </div>
 
       <!-- Main Content -->
@@ -92,7 +92,7 @@ $recent_products = $conn->query("
         <div class="card mt-4">
           <div class="card-header d-flex justify-content-between">
             <h5>Recent Products</h5>
-            <a href="add_product.php" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Add Product</a>
+          
           </div>
           <div class="card-body">
             <table class="table table-hover">
@@ -104,7 +104,7 @@ $recent_products = $conn->query("
                   <th>Stock</th>
                   <th>Price</th>
                   <th>Supplier</th>
-                  <th>Actions</th>
+              
                 </tr>
               </thead>
               <tbody>
@@ -117,10 +117,7 @@ $recent_products = $conn->query("
                       <td><?php echo $row['stock']; ?></td>
                       <td><?php echo '$' . number_format($row['price'], 2); ?></td>
                       <td><?php echo $row['supplier_id'] ?? 'N/A'; ?></td>
-                      <td>
-                        <a href="edit_product.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-warning"><i class="fa fa-edit"></i></a>
-                        <a href="delete_product.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');"><i class="fa fa-trash"></i></a>
-                      </td>
+                      
                     </tr>
                   <?php endwhile; ?>
                 <?php else: ?>

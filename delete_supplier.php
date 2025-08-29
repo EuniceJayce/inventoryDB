@@ -1,6 +1,20 @@
 <?php
 include 'db.php';
 
+// Check if supplier has purchase orders
+$check = $conn->prepare("SELECT COUNT(*) FROM purchase_orders WHERE supplier_id=?");
+$check->bind_param("i", $id);
+$check->execute();
+$check->bind_result($count);
+$check->fetch();
+$check->close();
+
+if ($count > 0) {
+    echo "Cannot delete supplier because it has related purchase orders.";
+    exit;
+}
+
+
 if (isset($_POST['supplier_id'])) {
     $id = $_POST['supplier_id'];
 

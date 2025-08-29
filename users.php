@@ -38,6 +38,7 @@ if(!isset($_SESSION['user_id'])) {
       <a href="purchase_orders.php"><i class="fa fa-file-invoice"></i> Purchase Orders</a>
       <a href="reports.php"><i class="fa fa-file"></i> Reports</a>
       <a href="users.php" style="background:#0b5ed7;"><i class="fa fa-users"></i> Users</a>
+      <a href="logout.php" class="text-danger"><i class="fa fa-sign-out-alt"></i> Logout</a>
     </div>
 
     <!-- Main Content -->
@@ -51,7 +52,6 @@ if(!isset($_SESSION['user_id'])) {
       </div>
 
       <div class="card">
-        <div class="card-header"><h5>User Accounts</h5></div>
         <div class="card-body">
           <table class="table table-hover">
             <thead class="table-light">
@@ -61,7 +61,7 @@ if(!isset($_SESSION['user_id'])) {
                 <th>Email</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th> </th>
               </tr>
             </thead>
             <tbody>
@@ -71,16 +71,70 @@ if(!isset($_SESSION['user_id'])) {
               if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                   echo "<tr>
-                          <td>{$row['user_id']}</td>
-                          <td>{$row['username']}</td>
-                          <td>{$row['email']}</td>
-                          <td><span class='badge bg-".($row['role']=='Admin'?'danger':($row['role']=='Staff'?'primary':'secondary'))."'>{$row['role']}</span></td>
-                          <td><span class='badge bg-".($row['status']=='Active'?'success':'danger')."'>{$row['status']}</span></td>
-                          <td>
-                            <button class='btn btn-sm btn-warning'><i class='fa fa-edit'></i></button>
-                            <button class='btn btn-sm btn-danger'><i class='fa fa-trash'></i></button>
-                          </td>
-                        </tr>";
+                    <td>{$row['user_id']}</td>
+                    <td>{$row['username']}</td>
+                    <td>{$row['email']}</td>
+                    <td><span class='badge bg-".($row['role']=='Admin'?'danger':($row['role']=='Staff'?'primary':'secondary'))."'>{$row['role']}</span></td>
+                    <td><span class='badge bg-".($row['status']=='Active'?'success':'danger')."'>{$row['status']}</span></td>
+                    <td>
+                      <!-- Edit Button -->
+                      <button class='btn btn-sm btn-warning' data-bs-toggle='modal' data-bs-target='#editUserModal{$row['user_id']}'>
+                        <i class='fa fa-edit'></i>
+                      </button>
+                      
+                      <!-- Delete Form -->
+                      <form method='POST' action='delete_user.php' style='display:inline-block;'>
+                        <input type='hidden' name='user_id' value='{$row['user_id']}'>
+                        <button type='submit' class='btn btn-sm btn-danger' onclick=\"return confirm('Are you sure you want to delete this user?');\">
+                          <i class='fa fa-trash'></i>
+                        </button>
+                      </form>
+                    </td>
+                  </tr>";
+
+                  // 🔹 Edit Modal for each user
+                  echo "
+                  <div class='modal fade' id='editUserModal{$row['user_id']}' tabindex='-1'>
+                    <div class='modal-dialog'>
+                      <div class='modal-content'>
+                        <form method='POST' action='update_user.php'>
+                          <div class='modal-header'>
+                            <h5 class='modal-title'>Edit User</h5>
+                            <button type='button' class='btn-close' data-bs-dismiss='modal'></button>
+                          </div>
+                          <div class='modal-body'>
+                            <input type='hidden' name='user_id' value='{$row['user_id']}'>
+                            <div class='mb-3'>
+                              <label>Username</label>
+                              <input type='text' name='username' class='form-control' value='{$row['username']}' required>
+                            </div>
+                            <div class='mb-3'>
+                              <label>Email</label>
+                              <input type='email' name='email' class='form-control' value='{$row['email']}' required>
+                            </div>
+                            <div class='mb-3'>
+                              <label>Role</label>
+                              <select name='role' class='form-control'>
+                                <option value='Admin' ".($row['role']=='Admin'?'selected':'').">Admin</option>
+                                <option value='Staff' ".($row['role']=='Staff'?'selected':'').">Staff</option>
+                              </select>
+                            </div>
+                            <div class='mb-3'>
+                              <label>Status</label>
+                              <select name='status' class='form-control'>
+                                <option value='Active' ".($row['status']=='Active'?'selected':'').">Active</option>
+                                <option value='Inactive' ".($row['status']=='Inactive'?'selected':'').">Inactive</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class='modal-footer'>
+                            <button type='button' class='btn btn-secondary' data-bs-dismiss='modal'>Cancel</button>
+                            <button type='submit' class='btn btn-primary'>Save Changes</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>";
                 }
               } else {
                 echo "<tr><td colspan='6' class='text-center'>No users found</td></tr>";
@@ -96,7 +150,7 @@ if(!isset($_SESSION['user_id'])) {
 </div>
 
 <!-- Add User Modal -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+<div class="modal fade" id="addUserModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <form method="POST" action="save_user.php">
@@ -122,7 +176,6 @@ if(!isset($_SESSION['user_id'])) {
             <select name="role" class="form-control" required>
               <option value="Admin">Admin</option>
               <option value="Staff">Staff</option>
-              <option value="Viewer">Viewer</option>
             </select>
           </div>
           <div class="mb-3">

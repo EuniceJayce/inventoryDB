@@ -38,6 +38,7 @@ if(!isset($_SESSION['user_id'])) {
       <a href="purchase_orders.php"><i class="fa fa-file-invoice"></i> Purchase Orders</a>
       <a href="reports.php"><i class="fa fa-file"></i> Reports</a>
       <a href="users.php"><i class="fa fa-users"></i> Users</a>
+      <a href="logout.php" class="text-danger"><i class="fa fa-sign-out-alt"></i> Logout</a>
     </div>
 
     <!-- Main Content -->
@@ -61,7 +62,7 @@ if(!isset($_SESSION['user_id'])) {
                 <th>Name</th>
                 <th>Stock</th>
                 <th>Price</th>
-                <th>Actions</th>
+                <th> </th>
               </tr>
             </thead>
             <tbody>
@@ -80,7 +81,7 @@ if(!isset($_SESSION['user_id'])) {
                               <td>{$row['supplier']}</td>
                               <td>{$row['name']}</td>
                               <td>{$row['stock']}</td>
-                              <td>\${$row['price']}</td>
+                              <td>₱{$row['price']}</td>
                               <td>
                                 <button class='btn btn-sm btn-warning' data-bs-toggle='modal' data-bs-target='#editProductModal{$row['product_id']}'><i class='fa fa-edit'></i></button>
                                 <button class='btn btn-sm btn-danger' data-bs-toggle='modal' data-bs-target='#deleteProductModal{$row['product_id']}'><i class='fa fa-trash'></i></button>

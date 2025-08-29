@@ -74,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
         <a href="purchase_orders.php"><i class="fa fa-file-invoice"></i> Purchase Orders</a>
         <a href="reports.php"><i class="fa fa-file"></i> Reports</a>
         <a href="users.php"><i class="fa fa-users"></i> Users</a>
+        <a href="logout.php" class="text-danger"><i class="fa fa-sign-out-alt"></i> Logout</a>
       </div>
 
       <!-- Main Content -->
@@ -94,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
                   <th>ID</th>
                   <th>Category Name</th>
                   <th>Description</th>
-                  <th>Actions</th>
+                  <th> </th>
                 </tr>
               </thead>
                 <tbody>
@@ -106,9 +107,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
                                 <td>{$row['name']}</td>
                                 <td>{$row['description']}</td>
                                 <td>
-                                    <button class='btn btn-sm btn-warning'><i class='fa fa-edit'></i></button>
-                                    <button class='btn btn-sm btn-danger'><i class='fa fa-trash'></i></button>
+                                    <button class='btn btn-sm btn-warning' data-bs-toggle='modal' data-bs-target='#editCategoryModal{$row['category_id']}'><i class='fa fa-edit'></i></button>
+                                    <button class='btn btn-sm btn-danger' data-bs-toggle='modal' data-bs-target='#deleteCategoryModal{$row['category_id']}'><i class='fa fa-trash'></i></button>
                                 </td>
+
                                 </tr>";
                         }
                     ?>
@@ -146,6 +148,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
     </div>
   </div>
 </div>
+
+<?php
+$result->data_seek(0);
+while ($row = $result->fetch_assoc()) {
+?>
+<!-- Edit Modal -->
+<div class="modal fade" id="editCategoryModal<?php echo $row['category_id']; ?>" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="update_category.php">
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title">Edit Category</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="category_id" value="<?php echo $row['category_id']; ?>">
+          <div class="mb-3">
+            <label class="form-label">Category Name</label>
+            <input type="text" name="name" class="form-control" value="<?php echo $row['name']; ?>" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="3" required><?php echo $row['description']; ?></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-warning">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteCategoryModal<?php echo $row['category_id']; ?>" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="delete_category.php">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Delete Category</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="category_id" value="<?php echo $row['category_id']; ?>">
+          Are you sure you want to delete <strong><?php echo $row['name']; ?></strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<?php } ?>
+
 
 
   <!-- Bootstrap JS -->

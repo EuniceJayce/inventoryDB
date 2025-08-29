@@ -95,7 +95,7 @@ while ($row = $stockPerCategory->fetch_assoc()) {
   <div class="container-fluid">
     <div class="row">
       <!-- Sidebar -->
-      <div class="col-md-2 sidebar p-3">
+      <div class="col-md-2 sidebar p-4">
         <h4 class="mb-4"><i class="fa fa-box"></i> Inventory</h4>
         <a href="index.php"><i class="fa fa-home"></i> Dashboard</a>
         <a href="products.php"><i class="fa fa-cubes"></i> Products</a>
@@ -104,6 +104,7 @@ while ($row = $stockPerCategory->fetch_assoc()) {
         <a href="purchase_orders.php"><i class="fa fa-file-invoice"></i> Purchase Orders</a>
         <a href="reports.php"><i class="fa fa-file"></i> Reports</a>
         <a href="users.php"><i class="fa fa-users"></i> Users</a>
+        <a href="logout.php" class="text-danger"><i class="fa fa-sign-out-alt"></i> Logout</a>
       </div>
 
       <!-- Main Content -->
@@ -145,7 +146,10 @@ while ($row = $stockPerCategory->fetch_assoc()) {
         <div class="card mb-4">
         <div class="card-header d-flex justify-content-between">
             <h5>Recent Stock Movements</h5>
-            <button class="btn btn-sm btn-secondary"><i class="fa fa-download"></i> Export</button>
+            <a href="export_reports.php" class="btn btn-sm btn-secondary">
+              <i class="fa fa-download"></i> Export
+            </a>
+
         </div>
         <div class="card-body">
             <table class="table table-hover">

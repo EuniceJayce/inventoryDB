@@ -4,7 +4,7 @@ include 'db.php';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // hashed password
+    $password = $_POST['password'];
     $role = $_POST['role'];
     $status = $_POST['status'];
 

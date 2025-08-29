@@ -1,10 +1,10 @@
 <?php
-$host = "localhost";  // XAMPP default
-$user = "root";       // XAMPP default user
-$pass = "";           // XAMPP default password is empty
-$db   = "inventory_db";
+$servername = "localhost";  // or "127.0.0.1"
+$username = "root";
+$password = ""; // default in XAMPP is empty
+$dbname = "inventory_db";
 
-$conn = new mysqli($host, $user, $pass, $db);
+$conn = new mysqli($servername, $username, $password, $dbname);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);

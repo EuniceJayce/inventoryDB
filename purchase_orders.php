@@ -4,9 +4,34 @@ if(!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
+include 'db.php';
+
+// ✅ Handle Add Order form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_order'])) {
+    $supplier_id = $_POST['supplier_id'];
+    $user_id     = $_POST['user_id'];
+    $order_date  = $_POST['order_date'];
+
+    // 👇 Always start as pending
+    $status = "pending";
+
+    $stmt = $conn->prepare("INSERT INTO purchase_orders (supplier_id, user_id, order_date, status) 
+                            VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("iiss", $supplier_id, $user_id, $order_date, $status);
+
+    if ($stmt->execute()) {
+        $_SESSION['success'] = "✅ New purchase order created.";
+    } else {
+        $_SESSION['error'] = "❌ Error: " . $conn->error;
+    }
+
+    header("Location: purchase_orders.php");
+    exit();
+
+
+}
 ?>
 
-<?php include 'db.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,20 +59,22 @@ if(!isset($_SESSION['user_id'])) {
         <a href="products.php"><i class="fa fa-cubes"></i> Products</a>
         <a href="categories.php"><i class="fa fa-tags"></i> Categories</a>
         <a href="suppliers.php"><i class="fa fa-truck"></i> Suppliers</a>
-        <a href="purchase_orders.php"><i class="fa fa-file-invoice"></i> Purchase Orders</a>
+        <a href="purchase_orders.php" style="background:#0b5ed7;"><i class="fa fa-file-invoice"></i> Purchase Orders</a>
         <a href="reports.php"><i class="fa fa-file"></i> Reports</a>
         <a href="users.php"><i class="fa fa-users"></i> Users</a>
+        <a href="logout.php" class="text-danger"><i class="fa fa-sign-out-alt"></i> Logout</a>
       </div>
 
       <!-- Main Content -->
       <div class="col-md-10 content">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h2>Purchase Orders</h2>
-          <a href="add_order.php" class="btn btn-primary"><i class="fa fa-plus"></i> New Order</a>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addOrderModal">
+            <i class="fa fa-plus"></i> New Order
+          </button>
         </div>
 
         <div class="card">
-          
           <div class="card-body">
             <table class="table table-hover">
               <thead class="table-light">
@@ -57,118 +84,188 @@ if(!isset($_SESSION['user_id'])) {
                   <th>Ordered By</th>
                   <th>Date</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th> </th>
                 </tr>
               </thead>
               <tbody>
                 <?php
-
-                $sql = "SELECT o.order_id, s.name AS supplier, u.username AS ordered_by, 
-               o.order_date, o.status
-                FROM purchase_orders o
-                JOIN suppliers s ON o.supplier_id = s.supplier_id
-                JOIN users u ON o.user_id = u.user_id
-                ORDER BY o.order_date DESC";
+                $sql = "SELECT o.order_id, s.supplier_id, s.name AS supplier, u.username AS ordered_by, 
+                        o.order_date, o.status
+                        FROM purchase_orders o
+                        LEFT JOIN suppliers s ON o.supplier_id = s.supplier_id
+                        LEFT JOIN users u ON o.user_id = u.user_id
+                        ORDER BY o.order_id ASC";
 
                 $result = $conn->query($sql);
-if ($result->num_rows > 0) {
-  while ($row = $result->fetch_assoc()) {
-      $status = ucfirst(strtolower($row['status']));
+                if ($result->num_rows > 0) {
+                  while($row = $result->fetch_assoc()) {
+                    
+                    // ✅ Status badges like users.php
+                    $statusValue = strtolower(trim($row['status']));
+                    switch($statusValue) {
+                        case 'pending':  
+                            $badgeClass = 'warning'; 
+                            $statusText = 'Pending';
+                            break;
+                        case 'approved': 
+                            $badgeClass = 'success'; 
+                            $statusText = 'Approved';
+                            break;
+                        case 'rejected': 
+                            $badgeClass = 'danger';  
+                            $statusText = 'Rejected';
+                            break;
+                        default:         
+                            $badgeClass = 'secondary'; 
+                            $statusText = ucfirst($statusValue);
+                            break;
+                    }
+                ?>
+                  <tr>
+                    <td><?= htmlspecialchars($row['order_id']) ?></td>
+                    <td><?= htmlspecialchars($row['supplier']) ?></td>
+                    <td><?= htmlspecialchars($row['ordered_by']) ?></td>
+                    <td><?= htmlspecialchars($row['order_date']) ?></td>
+                    <td>
+                      <?php if ($statusValue == 'pending'): ?>
+                        <form method="POST" action="mark_delivered.php" style="display:inline;">
+                          <input type="hidden" name="order_id" value="<?= $row['order_id'] ?>">
+                          <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fa fa-check"></i> Mark as Delivered
+                          </button>
+                        </form>
+                      <?php else: ?>
+                        <span class="badge bg-dark">Delivered</span>
+                      <?php endif; ?>
+                    </td>
 
-      if ($status == 'Pending') {
-          $badgeClass = 'warning';
-      } elseif ($status == 'Approved') {
-          $badgeClass = 'success';
-      } elseif ($status == 'Reject' || $status == 'Rejected') {
-          $badgeClass = 'danger';
-      } else {
-          $badgeClass = 'secondary';
-      }
-?>
-  <tr>
-    <td><?= $row['order_id'] ?></td>
-    <td><?= $row['supplier'] ?></td>
-    <td><?= $row['ordered_by'] ?></td>
-    <td><?= $row['order_date'] ?></td>
-    <td><span class="badge bg-<?= $badgeClass ?>"><?= $status ?></span></td>
-    <td>
-      <!-- Edit Button -->
-      <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal<?= $row['order_id'] ?>">
-        <i class="fa fa-edit"></i>
-      </button>
+                    <td>
+                      <a href="delete_order.php?id=<?= $row['order_id'] ?>" 
+                        class="btn btn-sm btn-danger" 
+                        onclick="return confirm('Are you sure you want to delete this order?');">
+                        <i class="fa fa-trash"></i>
+                      </a>
+                    </td>
 
-      <!-- Delete Button -->
-      <a href="delete_order.php?id=<?= $row['order_id'] ?>" 
-         class="btn btn-sm btn-danger" 
-         onclick="return confirm('Are you sure you want to delete this order?');">
-         <i class="fa fa-trash"></i>
-      </a>
-    </td>
-  </tr>
 
-  <!-- Modal -->
-  <div class="modal fade" id="editModal<?= $row['order_id'] ?>" tabindex="-1" aria-hidden="true">
+                  </tr>
+
+                  <!-- Edit Modal -->
+                  <div class="modal fade" id="editModal<?= $row['order_id'] ?>" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Edit Order #<?= $row['order_id'] ?></h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="POST" action="update_order.php">
+                          <div class="modal-body">
+                            <input type="hidden" name="order_id" value="<?= $row['order_id'] ?>">
+
+                            <!-- Supplier Dropdown -->
+                            <div class="mb-3">
+                              <label class="form-label">Supplier</label>
+                              <select name="supplier_id" class="form-control" required>
+                                <?php
+                                $suppliers2 = $conn->query("SELECT * FROM suppliers");
+                                while ($sup2 = $suppliers2->fetch_assoc()) {
+                                  $selected = ($sup2['supplier_id'] == $row['supplier_id']) ? "selected" : "";
+                                  echo "<option value='{$sup2['supplier_id']}' $selected>{$sup2['name']}</option>";
+                                }
+                                ?>
+                              </select>
+                            </div>
+
+                            <!-- Date -->
+                            <div class="mb-3">
+                              <label class="form-label">Order Date</label>
+                              <input type="date" name="order_date" class="form-control" value="<?= $row['order_date'] ?>" required>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="mb-3">
+                              <label class="form-label">Status</label>
+                              <select name="status" class="form-select" required>
+                                <option value="Pending"  <?= (strtolower(trim($row['status'])) == 'pending')  ? 'selected' : '' ?>>Pending</option>
+                                <option value="Approved" <?= (strtolower(trim($row['status'])) == 'approved') ? 'selected' : '' ?>>Approved</option>
+                                <option value="Rejected" <?= (strtolower(trim($row['status'])) == 'rejected') ? 'selected' : '' ?>>Rejected</option>
+                              </select>
+
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" name="update" class="btn btn-primary">Save Changes</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+
+                <?php
+                  }
+                } else {
+                  echo "<tr><td colspan='6' class='text-center'>No orders found</td></tr>";
+                }
+                ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Order Modal -->
+  <div class="modal fade" id="addOrderModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Edit Order #<?= $row['order_id'] ?></h5>
+          <h5 class="modal-title">Create New Purchase Order</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <form method="POST" action="update_order.php">
+        <form method="POST" action="">
           <div class="modal-body">
-            <input type="hidden" name="order_id" value="<?= $row['order_id'] ?>">
-
             <!-- Supplier Dropdown -->
             <div class="mb-3">
               <label class="form-label">Supplier</label>
-              <select name="supplier_id" class="form-control" required>
+              <select name="supplier_id" class="form-select" required>
+                <option value="">Select Supplier</option>
                 <?php
-                $suppliers2 = $conn->query("SELECT * FROM suppliers");
-                while ($sup2 = $suppliers2->fetch_assoc()) {
-                  $selected = ($sup2['name'] == $row['supplier']) ? "selected" : "";
-                  echo "<option value='{$sup2['supplier_id']}' $selected>{$sup2['name']}</option>";
+                $suppliers = $conn->query("SELECT supplier_id, name FROM suppliers ORDER BY name ASC");
+                while ($row = $suppliers->fetch_assoc()) {
+                    echo "<option value='{$row['supplier_id']}'>{$row['name']}</option>";
                 }
                 ?>
               </select>
             </div>
 
-            <!-- Date -->
+            <!-- Ordered By -->
             <div class="mb-3">
-              <label class="form-label">Order Date</label>
-              <input type="date" name="order_date" class="form-control" value="<?= $row['order_date'] ?>" required>
-            </div>
-
-            <!-- Status -->
-            <div class="mb-3">
-              <label class="form-label">Status</label>
-              <select name="status" class="form-control">
-                <option value="Pending"  <?= ($row['status']=="Pending" ? "selected" : "") ?>>Pending</option>
-                <option value="Approved" <?= ($row['status']=="Approved" ? "selected" : "") ?>>Approved</option>
-                <option value="Rejected" <?= ($row['status']=="Rejected" ? "selected" : "") ?>>Rejected</option>
+              <label class="form-label">Ordered By</label>
+              <select name="user_id" class="form-select" required>
+                <option value="">Select User</option>
+                <?php
+                $users = $conn->query("SELECT user_id, username FROM users ORDER BY username ASC");
+                while ($row = $users->fetch_assoc()) {
+                    echo "<option value='{$row['user_id']}'>{$row['username']}</option>";
+                }
+                ?>
               </select>
             </div>
-          </div>
+
+            <!-- Order Date -->
+            <div class="mb-3">
+              <label class="form-label">Order Date</label>
+              <input type="date" name="order_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
+            </div>
+
+          
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" name="update" class="btn btn-primary">Save Changes</button>
+            <button type="submit" name="add_order" class="btn btn-primary">Save Order</button>
           </div>
         </form>
-      </div>
-    </div>
-  </div>
-
-<?php
-  }
-} else {
-  echo "<tr><td colspan='6' class='text-center'>No orders found</td></tr>";
-}
-?>
-
-              </tbody>
-            </table>
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
